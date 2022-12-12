@@ -1,73 +1,58 @@
-import "./Search.css";
-import { FiSearch } from "react-icons/fi";
-import React,{ useEffect, useRef, useState } from "react";
-import axios from "axios";
+import React, { Fragment, useState } from "react";
+import 'bootstrap/dist/css/bootstrap.min.css';
+// import "./App.css";
 
-const Search = () => {
-  // fetching data
-  const [users, setusers] = useState([]);
+function Search() {
+  const [name, setName] = useState("");
+  const [users, setUsers] = useState([]);
 
-  const fetchUsers = async () => {
-    const response = await axios.get(
-      "https://jsonplaceholder.typicode.com/users"
-    );
-    setusers(response.data);
+  const onSubmitForm = async e => {
+    e.preventDefault();
+    try {
+      const response = await fetch(`http://localhost:5000/users/?name=${name}`);
+
+      const parseResponse = await response.json();
+
+      setUsers(parseResponse);
+    } catch (err) {
+      console.error(err.message);
+    }
   };
-  useEffect(() => {
-    fetchUsers();
-  }, []);
-
-  // filter users
-
-  const [filtered, setfiltered] = useState([]);
-  const [search, setsearch] = useState("");
-
-  const searchRef = useRef();
-
-  useEffect(() => {
-    setfiltered(
-      users.filter((item) =>
-        item.name.toLowerCase().includes(search.toLowerCase())
-      )
-    );
-  }, [search]);
-
   return (
-    <div className="app">
-      <div className="serach">
-        <div className="searchbox">
+    <Fragment>
+      <div className="container text-center">
+        <h1 className="my-5">Party List</h1>
+        <form className="d-flex" onSubmit={onSubmitForm}>
           <input
             type="text"
-            placeholder="search"
-            onChange={(e) => setsearch(e.target.value)}
-            ref={searchRef}
+            name="name"
+            placeholder="Enter user ..."
+            className="form-control"
+            value={name}
+            onChange={e => setName(e.target.value)}
           />
-          <FiSearch />
-        </div>
-        {search.length > 0 && (
-          <div className="dropdown">
-            {filtered.length > 0 ? (
-              filtered.map((item, index) => {
-                return (
-                  <div
-                    className="card"
-                    key={index}
-                    onClick={(e) => {
-                      searchRef.current.value = item.name;
-                      setsearch("");
-                    }}>
-                    <p>{item.name}</p>
-                  </div>
-                );
-              })
-            ) : (
-              <p>no match</p>
-            )}
-          </div>
-        )}
+          <button className="btn btn-success">Submit</button>
+        </form>
+        <table className="table my-5">
+          <thead>
+            <tr>
+              <th>First Name</th>
+              <th>Last Name</th>
+            </tr>
+          </thead>
+          <tbody>
+            {users.map(user => (
+              <tr key={user.user_id}>
+                <td>{user.first_name}</td>
+                <td>{user.last_name}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+        {users.length === 0 && <p>No Results Found</p>}
       </div>
-    </div>
+    </Fragment>
   );
-};
+}
 
 export default Search;
